@@ -235,10 +235,10 @@ const Dashboard = () => {
 
   const handleSaveColumnName = (colName, colId) => {
     setColumnName(colName);
-    if (columns.some((col) => col.columnName === colName)) {
-      setColumnErrorMsg("Column name already exist!");
-      return;
-    }
+    // if (columns.some((col) => col.columnName === colName)) {
+    //   setColumnErrorMsg("Column name already exist!");
+    //   return;
+    // }
     setColumns((prevState) => {
       const updatedColumns = prevState.map((column) =>
         column.id === colId ? { ...column, columnName: colName } : column
