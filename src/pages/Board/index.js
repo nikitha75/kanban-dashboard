@@ -1,6 +1,6 @@
 import React from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { taskData } from "../../data/taskData";
+import { taskData } from "../../utils/data/taskData";
 
 const Board = () => {
   const priorityStyle = {
