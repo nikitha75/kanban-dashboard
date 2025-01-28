@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
+import { IoIosCloseCircle } from "react-icons/io";
 import { MdTask } from "react-icons/md";
 import "./index.css";
-import Sidebar from "./../../components/Sidebar";
 import Board from "../Board";
+import Sidebar from "./../../components/Sidebar";
+import { users, uColors } from "../../utils/data/userData";
+import { taskPriorities, priorityStyle } from "../../utils/data/taskData";
 import Modal from "../../components/Modal";
-import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
+import FormModal from "../../components/FormModal";
 
 const Dashboard = () => {
   const [columnName, setColumnName] = useState("");
@@ -36,88 +40,15 @@ const Dashboard = () => {
   const [taskErrorMsg, setTaskErrorMsg] = useState("");
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState("");
   const [addTaskUser, setAddTaskUser] = useState("");
-
-  const taskPriorities = [
-    {
-      priorityId: uuidv4(),
-      priority: "HIGH",
-    },
-    {
-      priorityId: uuidv4(),
-      priority: "MEDIUM",
-    },
-    {
-      priorityId: uuidv4(),
-      priority: "LOW",
-    },
-  ];
-
-  const priorityStyle = {
-    HIGH: "#ed3980",
-    MEDIUM: "#377ef1",
-    LOW: "#10b4b3",
-  };
-
-  const users = [
-    {
-      userId: uuidv4(),
-      userName: "Aastha Agarwal",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Ishaan Sharma",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Riaan Mehta",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Samaira Mishra",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Vihaan Patel",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Zara Sharma",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Yash Sen",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Riya Patel",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Nisha Mehta",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Rohit Roy",
-    },
-    {
-      userId: uuidv4(),
-      userName: "Alina Bansal",
-    },
-  ];
-
-  const uColors = [
-    { bgColor: "#9030cc", color: "#FFFFFF" }, // Purple background, white text
-    { bgColor: "#F9A8D4", color: "#000000" }, // Light pink background, black text
-    { bgColor: "#BAE6FD", color: "#000000" }, // Light sky background, black text
-    { bgColor: "#86EFAC", color: "#000000" }, // Light green background, black text
-    { bgColor: "#D8B4FE", color: "#000000" }, // Light purple background, black text
-    { bgColor: "#FCD34D", color: "#000000" }, // Light yellow background, black text
-    { bgColor: "#1D4ED8", color: "#FFFFFF" }, // Dark blue background, white text
-    { bgColor: "#A3E635", color: "#000000" }, // Lime green background, black text
-    { bgColor: "#86198F", color: "#FFFFFF" }, // Dark fuchsia background, white text
-    { bgColor: "#2DD4BF", color: "#FFFFFF" }, // Teal background, white text
-    { bgColor: "#D4D4D8", color: "#000000" }, // Zinc background, black text
-  ];
+  const [isHoverUser, setIsHoverUser] = useState({});
+  const [isRemoveTaskModalOpen, setIsRemoveTaskModalOpen] = useState("");
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState("");
+  const [editTaskData, setEditTaskData] = useState({
+    taskName: "",
+    priority: "",
+    description: "",
+    dueDate: "",
+  });
 
   const getAssignedUserColor = () => {
     const color = uColors[Math.floor(Math.random() * uColors.length)];
@@ -126,7 +57,11 @@ const Dashboard = () => {
   };
 
   const getShortName = (user) => {
-    const shortName = (user[0] + user[1]).toUpperCase();
+    const shortName = user
+      .split(" ")
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase();
     return shortName;
   };
 
@@ -279,6 +214,19 @@ const Dashboard = () => {
     setIsRemoveModalOpen(false);
   };
 
+  const handleOpenRemoveTaskModal = (taskName) => {
+    setIsRemoveTaskModalOpen(taskName);
+  };
+
+  const handleRemoveTask = (taskId) => {
+    setTasks((prevState) => prevState.filter((task) => task.taskId !== taskId));
+    setIsRemoveTaskModalOpen("");
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsRemoveTaskModalOpen(false);
+  };
+
   const handleClickAddUser = (taskId) => {
     setAddTaskUser(taskId);
   };
@@ -315,9 +263,52 @@ const Dashboard = () => {
     );
   };
 
-  const handleClickOutside = (event) => {
+  const handleHoverUser = (tId, userId) => {
+    setIsHoverUser({ tId, userId });
+  };
+
+  const handleOpenEditTaskModal = (taskName, task) => {
+    setIsEditTaskModalOpen(taskName);
+    setEditTaskData({
+      taskName: task.taskName,
+      priority: task.priority,
+      description: task.description,
+      dueDate: task.dueDate,
+    });
+  };
+
+  const handleChangeEditTask = (event) => {
+    const { name, value } = event.target;
+    // console.log("name val: ", name, value);
+    setEditTaskData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleEditTask = (tId) => {
+    // setTasks((prevState) => prevState.filter((task) => task.taskId !== tId));
+    setTasks((prevState) =>
+      prevState.map((task) =>
+        task.taskId === tId ? { ...task, ...editTaskData } : task
+      )
+    );
+    setIsEditTaskModalOpen("");
+  };
+
+  const handleCloseEditTaskModal = () => {
+    setIsEditTaskModalOpen(false);
+  };
+
+  const handleClickOutsideUser = (event) => {
     if (!event.target.closest(".users-list")) {
       setAddTaskUser("");
+    }
+  };
+
+  const handleClickOutsideColumnAction = (event) => {
+    if (!event.target.closest(".column-actions-list")) {
+      setColumnActionOpen("");
     }
   };
 
@@ -330,9 +321,16 @@ const Dashboard = () => {
   }, [tasks]);
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutsideUser);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutsideColumnAction);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideColumnAction);
     };
   }, []);
 
@@ -368,7 +366,7 @@ const Dashboard = () => {
                 </div>
 
                 {columnActionOpen === columnName && (
-                  <div className="column-action-container">
+                  <div className="column-action-container column-actions-list">
                     {editColumnName === columnName ? (
                       <button
                         onClick={() =>
@@ -397,9 +395,11 @@ const Dashboard = () => {
 
                 {isRemoveModalOpen === columnName && (
                   <Modal
-                    colId={id}
-                    handleRemoveColumn={handleRemoveColumn}
-                    handleCloseColumnModal={handleCloseColumnModal}
+                    id={id}
+                    name={columnName}
+                    type="column"
+                    handleRemove={handleRemoveColumn}
+                    handleCloseModal={handleCloseColumnModal}
                   />
                 )}
 
@@ -415,7 +415,8 @@ const Dashboard = () => {
                       dueDate,
                       priorityColors,
                     } = task;
-
+                    const date = new Date(dueDate);
+                    const formattedDate = date.toLocaleDateString("en-GB");
                     return (
                       <div key={taskId}>
                         <div className="task-card">
@@ -429,14 +430,33 @@ const Dashboard = () => {
                               {priority}
                             </div>
                             <div className="task-action-items-container">
-                              <div className="task-action-item">
+                              <div
+                                className="task-action-item"
+                                onClick={() =>
+                                  handleOpenEditTaskModal(taskName, task)
+                                }
+                              >
                                 <FaPencilAlt />
                               </div>
-                              <div className="task-action-item">
+                              <div
+                                className="task-action-item"
+                                onClick={() =>
+                                  handleOpenRemoveTaskModal(taskName)
+                                }
+                              >
                                 <FaTrashAlt />
                               </div>
                             </div>
                           </div>
+                          {isRemoveTaskModalOpen === taskName && (
+                            <Modal
+                              id={taskId}
+                              name={taskName}
+                              type="task"
+                              handleRemove={handleRemoveTask}
+                              handleCloseModal={handleCloseTaskModal}
+                            />
+                          )}
                           <h2 className="task-title">{taskName}</h2>
                           <div className="users-container">
                             <div className="assigned-users-container">
@@ -448,16 +468,32 @@ const Dashboard = () => {
                                   return (
                                     <div
                                       key={idx}
-                                      className="assigned-user"
-                                      style={{
-                                        backgroundColor: bgColor,
-                                        color: color,
-                                      }}
+                                      className="assign-container"
+                                      onMouseEnter={() =>
+                                        handleHoverUser(taskId, user.userId)
+                                      }
+                                      onMouseLeave={() =>
+                                        handleHoverUser("", "")
+                                      }
                                       onClick={() =>
                                         handleRemoveUser(taskId, user)
                                       }
                                     >
-                                      {getShortName(user.userName)}
+                                      <div
+                                        className="assigned-user"
+                                        style={{
+                                          backgroundColor: bgColor,
+                                          color: color,
+                                        }}
+                                      >
+                                        {getShortName(user.userName)}
+                                      </div>
+                                      {isHoverUser.tId === taskId &&
+                                        isHoverUser.userId === user.userId && (
+                                          <div className="unassign-user-icon">
+                                            <IoIosCloseCircle size={14} />
+                                          </div>
+                                        )}
                                     </div>
                                   );
                                 })}
@@ -489,13 +525,29 @@ const Dashboard = () => {
                           </div>
                           <div className="description-container">
                             <h3 className="description-heading">Description</h3>
-                            <p className="description-content">{description}</p>
+                            <p className="description-content">
+                              {description.length > 0 ? description : "-"}
+                            </p>
                           </div>
                           <div className="due-date-container">
                             <h3 className="due-date-heading">Due date</h3>
-                            <div className="due-date">{dueDate}</div>
+                            <div className="due-date">
+                              {dueDate
+                                ? formattedDate
+                                : dueDate === "" && "No due date"}
+                            </div>
                           </div>
                         </div>
+                        {isEditTaskModalOpen === taskName && (
+                          <FormModal
+                            editTaskData={editTaskData}
+                            taskId={taskId}
+                            handleChangeEditTask={handleChangeEditTask}
+                            taskPriorities={taskPriorities}
+                            handleEditTask={handleEditTask}
+                            handleCloseEditTaskModal={handleCloseEditTaskModal}
+                          />
+                        )}
                       </div>
                     );
                   })}

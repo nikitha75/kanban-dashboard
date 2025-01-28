@@ -1,6 +1,7 @@
 import React from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { taskData } from "../../utils/data/taskData";
+import { sampleTaskData } from "./../../utils/data/sampleTaskData";
+import "./index.css";
 
 const Board = () => {
   const priorityStyle = {
@@ -19,7 +20,7 @@ const Board = () => {
               <BsThreeDotsVertical />
             </div>
           </div>
-          {taskData
+          {sampleTaskData
             .filter((task) => task.column === "TO DO")
             .map((task) => {
               const {
@@ -31,6 +32,10 @@ const Board = () => {
                 priority,
                 column,
               } = task;
+
+              const date = new Date(due);
+              const formattedDate = date.toLocaleDateString("en-GB");
+
               return (
                 <div key={id} className="task-card">
                   <div
@@ -58,7 +63,7 @@ const Board = () => {
                     <label htmlFor="dueDate" className="due-date-label">
                       Due date
                     </label>
-                    <div className="due-date">{due}</div>
+                    <div className="due-date">{formattedDate}</div>
                   </div>
                 </div>
               );
@@ -75,7 +80,7 @@ const Board = () => {
               <BsThreeDotsVertical />
             </button>
           </div>
-          {taskData
+          {sampleTaskData
             .filter((task) => task.column === "IN PROGRESS")
             .map((task) => {
               const {
@@ -87,6 +92,10 @@ const Board = () => {
                 priority,
                 column,
               } = task;
+
+              const date = new Date(due);
+              const formattedDate = date.toLocaleDateString("en-GB");
+
               return (
                 <div key={id} className="task-card">
                   <div
@@ -114,7 +123,7 @@ const Board = () => {
                     <label htmlFor="dueDate" className="due-date-label">
                       Due date
                     </label>
-                    <div className="due-date">{due}</div>
+                    <div className="due-date">{formattedDate}</div>
                   </div>
                 </div>
               );
@@ -131,7 +140,7 @@ const Board = () => {
               <BsThreeDotsVertical />
             </div>
           </div>
-          {taskData
+          {sampleTaskData
             .filter((task) => task.column === "IN REVIEW")
             .map((task) => {
               const {
@@ -143,6 +152,10 @@ const Board = () => {
                 priority,
                 column,
               } = task;
+
+              const date = new Date(due);
+              const formattedDate = date.toLocaleDateString("en-GB");
+
               return (
                 <div key={id} className="task-card">
                   <div
@@ -170,7 +183,7 @@ const Board = () => {
                     <label htmlFor="dueDate" className="due-date-label">
                       Due date
                     </label>
-                    <div className="due-date">{due}</div>
+                    <div className="due-date">{formattedDate}</div>
                   </div>
                 </div>
               );
@@ -187,7 +200,7 @@ const Board = () => {
               <BsThreeDotsVertical />
             </div>
           </div>
-          {taskData
+          {sampleTaskData
             .filter((task) => task.column === "DONE")
             .map((task) => {
               const {
@@ -199,6 +212,10 @@ const Board = () => {
                 priority,
                 column,
               } = task;
+
+              const date = new Date(due);
+              const formattedDate = date.toLocaleDateString("en-GB");
+
               return (
                 <div key={id} className="task-card">
                   <div
@@ -226,7 +243,7 @@ const Board = () => {
                     <label htmlFor="dueDate" className="due-date-label">
                       Due date
                     </label>
-                    <div className="due-date">{due}</div>
+                    <div className="due-date">{formattedDate}</div>
                   </div>
                 </div>
               );
