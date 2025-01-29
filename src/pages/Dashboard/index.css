@@ -61,6 +61,7 @@
   display: flex;
   align-items: center;
   position: relative;
+  flex-wrap: wrap;
 }
 
 .assigned-user {
@@ -90,8 +91,6 @@
   top: -4px;
   right: 2px;
   color: #f41484;
-  /* color: #d0d0d0; */
-  /* color: #f8a7a7; */
   cursor: pointer;
   z-index: 2;
 } 
@@ -348,4 +347,21 @@
 
 .new-user {
   cursor: pointer;
+}
+
+.drop-containers {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.drop-container {
+  background-color: #90b6ee;
+  border-radius: 4px;
+  width: 300px;
+  height: 400px;
+}
+
+.draggable-task-card {
+  cursor: grab;
 }
