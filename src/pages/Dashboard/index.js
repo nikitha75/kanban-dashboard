@@ -49,6 +49,8 @@ const Dashboard = () => {
     description: "",
     dueDate: "",
   });
+  const [dragTask, setDragTask] = useState("");
+  const [dropColumn, setDropColumn] = useState("");
 
   const getAssignedUserColor = () => {
     const color = uColors[Math.floor(Math.random() * uColors.length)];
@@ -239,7 +241,12 @@ const Dashboard = () => {
             (assignedUser) => assignedUser.userName === user.userName
           );
           if (!isUserExist) {
-            return { ...task, assignedUsers: [...task.assignedUsers, user] };
+            const priorityColors = getAssignedUserColor();
+            return {
+              ...task,
+              assignedUsers: [...task.assignedUsers, user],
+              priorityColors: [...task.priorityColors, priorityColors],
+            };
           }
         }
         return task;
@@ -247,7 +254,7 @@ const Dashboard = () => {
     );
   };
 
-  const handleRemoveUser = (tId, user) => {
+  const handleRemoveUser = (tId, user, color) => {
     setTasks((prevState) =>
       prevState.map((task) => {
         if (task.taskId === tId) {
@@ -256,7 +263,16 @@ const Dashboard = () => {
               return assignedUser.userId !== user.userId;
             }
           );
-          return { ...task, assignedUsers: updatedAssignedUsers };
+          const updatedPriorityColors = task.priorityColors.filter(
+            (priorityColors) => {
+              return priorityColors.colorId !== color.colorId;
+            }
+          );
+          return {
+            ...task,
+            assignedUsers: updatedAssignedUsers,
+            priorityColors: updatedPriorityColors,
+          };
         }
         return task;
       })
@@ -279,7 +295,6 @@ const Dashboard = () => {
 
   const handleChangeEditTask = (event) => {
     const { name, value } = event.target;
-    // console.log("name val: ", name, value);
     setEditTaskData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -287,7 +302,6 @@ const Dashboard = () => {
   };
 
   const handleEditTask = (tId) => {
-    // setTasks((prevState) => prevState.filter((task) => task.taskId !== tId));
     setTasks((prevState) =>
       prevState.map((task) =>
         task.taskId === tId ? { ...task, ...editTaskData } : task
@@ -298,6 +312,25 @@ const Dashboard = () => {
 
   const handleCloseEditTaskModal = () => {
     setIsEditTaskModalOpen(false);
+  };
+
+  const handleDragStartTask = (event, task) => {
+    setDragTask(task);
+  };
+
+  const handleDragOverTask = (event) => {
+    event.preventDefault();
+  };
+
+  const handleDropTask = (event, colId) => {
+    event.preventDefault();
+    setDropColumn(colId);
+    dragTask.colId = colId;
+    setTasks((prevState) =>
+      prevState.map((task) =>
+        task.taskId === dragTask.taskId ? { ...task, colId: colId } : task
+      )
+    );
   };
 
   const handleClickOutsideUser = (event) => {
@@ -344,7 +377,11 @@ const Dashboard = () => {
         {columns.map((column) => {
           const { id, columnName } = column;
           return (
-            <div key={id}>
+            <div
+              key={id}
+              onDragOver={handleDragOverTask}
+              onDrop={(event) => handleDropTask(event, id)}
+            >
               <div className="column">
                 <div className="column-title-container">
                   {editColumnName === columnName ? (
@@ -418,7 +455,12 @@ const Dashboard = () => {
                     const date = new Date(dueDate);
                     const formattedDate = date.toLocaleDateString("en-GB");
                     return (
-                      <div key={taskId}>
+                      <div
+                        key={taskId}
+                        draggable
+                        onDragStart={(e) => handleDragStartTask(e, task)}
+                        className="draggable-task-card"
+                      >
                         <div className="task-card">
                           <div className="task-header">
                             <div
@@ -465,6 +507,7 @@ const Dashboard = () => {
                                   const colorIdx = idx % priorityColors.length;
                                   const { bgColor, color } =
                                     priorityColors[colorIdx];
+
                                   return (
                                     <div
                                       key={idx}
@@ -476,7 +519,11 @@ const Dashboard = () => {
                                         handleHoverUser("", "")
                                       }
                                       onClick={() =>
-                                        handleRemoveUser(taskId, user)
+                                        handleRemoveUser(
+                                          taskId,
+                                          user,
+                                          priorityColors[colorIdx]
+                                        )
                                       }
                                     >
                                       <div
