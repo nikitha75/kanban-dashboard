@@ -392,7 +392,6 @@
   border-radius: 4px;
   display: inline-block;
   line-height: 30px;
-  padding: 10px;
   position: absolute;
   top: 20px;
   right: 10px;
@@ -401,6 +400,12 @@
 
 .new-user {
   cursor: pointer;
+  padding: 10px;
+}
+
+.new-user:hover {
+  background-color: #a1b6db;
+  color: #ffffff;
 }
 
 .drop-containers {
