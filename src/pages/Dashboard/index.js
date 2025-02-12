@@ -51,6 +51,7 @@ const Dashboard = () => {
   });
   const [dragTask, setDragTask] = useState("");
   const [dropColumn, setDropColumn] = useState("");
+  const [isShowSampleData, setIsShowSampleData] = useState(true);
 
   const getAssignedUserColor = () => {
     const color = uColors[Math.floor(Math.random() * uColors.length)];
@@ -345,6 +346,21 @@ const Dashboard = () => {
     }
   };
 
+  const handleToggleSampleData = () => {
+    localStorage.setItem("kbSample", JSON.stringify(!isShowSampleData));
+    setIsShowSampleData(!isShowSampleData);
+  };
+
+  useEffect(() => {
+    const sampleDataVal = JSON.parse(localStorage.getItem("kbSample"));
+    if (sampleDataVal !== null) {
+      setIsShowSampleData(sampleDataVal);
+    } else {
+      setIsShowSampleData(true);
+      localStorage.setItem("kbSample", JSON.stringify(true));
+    }
+  }, [isShowSampleData]);
+
   useEffect(() => {
     localStorage.setItem("kbColumns", JSON.stringify(columns));
   }, [columns]);
@@ -372,402 +388,436 @@ const Dashboard = () => {
       <div>
         <Sidebar />
       </div>
-      <Board />
-      <div className="columns-container">
-        {columns.map((column) => {
-          const { id, columnName } = column;
-          return (
-            <div
-              key={id}
-              onDragOver={handleDragOverTask}
-              onDrop={(event) => handleDropTask(event, id)}
-            >
-              <div className="column">
-                <div className="column-title-container">
-                  {editColumnName === columnName ? (
-                    <input
-                      type="text"
-                      value={editedColumnName}
-                      onChange={handleEditColumnName}
-                    />
-                  ) : (
-                    <h1 className="column-title">{columnName}</h1>
-                  )}
+      <div>
+        <div
+          className={`toggle-sample-btn-container ${
+            isShowSampleData ? "active" : ""
+          }`}
+          onClick={handleToggleSampleData}
+        >
+          <div
+            className={`toggle-sample-btn ${isShowSampleData ? "active" : ""}`}
+          ></div>
+        </div>
+        <div className="board-container">
+          <div className={`sm-board ${isShowSampleData ? "" : "hidden"}`}>
+            <Board />
+          </div>
+          <div
+            className={`columns-container ${
+              isShowSampleData ? "" : "col-transition"
+            }`}
+          >
+            {columns.map((column) => {
+              const { id, columnName } = column;
+              return (
+                <div
+                  key={id}
+                  onDragOver={handleDragOverTask}
+                  onDrop={(event) => handleDropTask(event, id)}
+                >
+                  <div className="column">
+                    <div className="column-title-container">
+                      {editColumnName === columnName ? (
+                        <input
+                          type="text"
+                          value={editedColumnName}
+                          onChange={handleEditColumnName}
+                        />
+                      ) : (
+                        <h1 className="column-title">{columnName}</h1>
+                      )}
 
-                  <button
-                    className="btn column-action-icon"
-                    onClick={() => handleColumnAction(columnName)}
-                  >
-                    <BsThreeDotsVertical size={16} />
-                  </button>
-                </div>
+                      <button
+                        className="btn column-action-icon"
+                        onClick={() => handleColumnAction(columnName)}
+                      >
+                        <BsThreeDotsVertical size={16} />
+                      </button>
+                    </div>
 
-                {columnActionOpen === columnName && (
-                  <div className="column-action-container column-actions-list">
-                    {editColumnName === columnName ? (
-                      <button
-                        onClick={() =>
-                          handleSaveColumnName(editedColumnName, id)
-                        }
-                        className="btn column-edit-btn"
-                      >
-                        Save
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleClickEditColumn(columnName)}
-                        className="btn column-edit-btn"
-                      >
-                        Edit
-                      </button>
+                    {columnActionOpen === columnName && (
+                      <div className="column-action-container column-actions-list">
+                        {editColumnName === columnName ? (
+                          <button
+                            onClick={() =>
+                              handleSaveColumnName(editedColumnName, id)
+                            }
+                            className="btn column-edit-btn"
+                          >
+                            Save
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleClickEditColumn(columnName)}
+                            className="btn column-edit-btn"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={() =>
+                            handleOpenRemoveColumnModal(columnName)
+                          }
+                          className="btn column-remove-btn"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     )}
-                    <button
-                      onClick={() => handleOpenRemoveColumnModal(columnName)}
-                      className="btn column-remove-btn"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
 
-                {isRemoveModalOpen === columnName && (
-                  <Modal
-                    id={id}
-                    name={columnName}
-                    type="column"
-                    handleRemove={handleRemoveColumn}
-                    handleCloseModal={handleCloseColumnModal}
-                  />
-                )}
+                    {isRemoveModalOpen === columnName && (
+                      <Modal
+                        id={id}
+                        name={columnName}
+                        type="column"
+                        handleRemove={handleRemoveColumn}
+                        handleCloseModal={handleCloseColumnModal}
+                      />
+                    )}
 
-                {tasks
-                  .filter((task) => task.colId === id)
-                  .map((task) => {
-                    const {
-                      taskId,
-                      taskName,
-                      priority,
-                      assignedUsers,
-                      description,
-                      dueDate,
-                      priorityColors,
-                    } = task;
-                    const date = new Date(dueDate);
-                    const formattedDate = date.toLocaleDateString("en-GB");
-                    return (
-                      <div
-                        key={taskId}
-                        draggable
-                        onDragStart={(e) => handleDragStartTask(e, task)}
-                        className="draggable-task-card"
-                      >
-                        <div className="task-card">
-                          <div className="task-header">
-                            <div
-                              className="priority"
-                              style={{
-                                backgroundColor: priorityStyle[priority],
-                              }}
-                            >
-                              {priority}
-                            </div>
-                            <div className="task-action-items-container">
-                              <div
-                                className="task-action-item"
-                                onClick={() =>
-                                  handleOpenEditTaskModal(taskName, task)
-                                }
-                              >
-                                <FaPencilAlt />
+                    {tasks
+                      .filter((task) => task.colId === id)
+                      .map((task) => {
+                        const {
+                          taskId,
+                          taskName,
+                          priority,
+                          assignedUsers,
+                          description,
+                          dueDate,
+                          priorityColors,
+                        } = task;
+                        const date = new Date(dueDate);
+                        const formattedDate = date.toLocaleDateString("en-GB");
+                        return (
+                          <div
+                            key={taskId}
+                            draggable
+                            onDragStart={(e) => handleDragStartTask(e, task)}
+                            className="draggable-task-card"
+                          >
+                            <div className="task-card">
+                              <div className="task-header">
+                                <div
+                                  className="priority"
+                                  style={{
+                                    backgroundColor: priorityStyle[priority],
+                                  }}
+                                >
+                                  {priority}
+                                </div>
+                                <div className="task-action-items-container">
+                                  <div
+                                    className="task-action-item"
+                                    onClick={() =>
+                                      handleOpenEditTaskModal(taskName, task)
+                                    }
+                                  >
+                                    <FaPencilAlt />
+                                  </div>
+                                  <div
+                                    className="task-action-item"
+                                    onClick={() =>
+                                      handleOpenRemoveTaskModal(taskName)
+                                    }
+                                  >
+                                    <FaTrashAlt />
+                                  </div>
+                                </div>
                               </div>
-                              <div
-                                className="task-action-item"
-                                onClick={() =>
-                                  handleOpenRemoveTaskModal(taskName)
-                                }
-                              >
-                                <FaTrashAlt />
-                              </div>
-                            </div>
-                          </div>
-                          {isRemoveTaskModalOpen === taskName && (
-                            <Modal
-                              id={taskId}
-                              name={taskName}
-                              type="task"
-                              handleRemove={handleRemoveTask}
-                              handleCloseModal={handleCloseTaskModal}
-                            />
-                          )}
-                          <h2 className="task-title">{taskName}</h2>
-                          <div className="users-container">
-                            <div className="assigned-users-container">
-                              {assignedUsers.length > 0 &&
-                                assignedUsers.map((user, idx) => {
-                                  const colorIdx = idx % priorityColors.length;
-                                  const { bgColor, color } =
-                                    priorityColors[colorIdx];
+                              {isRemoveTaskModalOpen === taskName && (
+                                <Modal
+                                  id={taskId}
+                                  name={taskName}
+                                  type="task"
+                                  handleRemove={handleRemoveTask}
+                                  handleCloseModal={handleCloseTaskModal}
+                                />
+                              )}
+                              <h2 className="task-title">{taskName}</h2>
+                              <div className="users-container">
+                                <div className="assigned-users-container">
+                                  {assignedUsers.length > 0 &&
+                                    assignedUsers.map((user, idx) => {
+                                      const colorIdx =
+                                        idx % priorityColors.length;
+                                      const { bgColor, color } =
+                                        priorityColors[colorIdx];
 
-                                  return (
-                                    <div
-                                      key={idx}
-                                      className="assign-container"
-                                      onMouseEnter={() =>
-                                        handleHoverUser(taskId, user.userId)
-                                      }
-                                      onMouseLeave={() =>
-                                        handleHoverUser("", "")
-                                      }
-                                      onClick={() =>
-                                        handleRemoveUser(
-                                          taskId,
-                                          user,
-                                          priorityColors[colorIdx]
-                                        )
-                                      }
-                                    >
-                                      <div
-                                        className="assigned-user"
-                                        style={{
-                                          backgroundColor: bgColor,
-                                          color: color,
-                                        }}
-                                      >
-                                        {getShortName(user.userName)}
-                                      </div>
-                                      {isHoverUser.tId === taskId &&
-                                        isHoverUser.userId === user.userId && (
-                                          <div className="unassign-user-icon">
-                                            <IoIosCloseCircle size={14} />
+                                      return (
+                                        <div
+                                          key={idx}
+                                          className="assign-container"
+                                          onMouseEnter={() =>
+                                            handleHoverUser(taskId, user.userId)
+                                          }
+                                          onMouseLeave={() =>
+                                            handleHoverUser("", "")
+                                          }
+                                          onClick={() =>
+                                            handleRemoveUser(
+                                              taskId,
+                                              user,
+                                              priorityColors[colorIdx]
+                                            )
+                                          }
+                                        >
+                                          <div
+                                            className="assigned-user"
+                                            style={{
+                                              backgroundColor: bgColor,
+                                              color: color,
+                                            }}
+                                          >
+                                            {getShortName(user.userName)}
                                           </div>
-                                        )}
-                                    </div>
-                                  );
-                                })}
-                              <div
-                                className="assign-user-icon"
-                                onClick={() => handleClickAddUser(taskId)}
-                              >
-                                +
+                                          {isHoverUser.tId === taskId &&
+                                            isHoverUser.userId ===
+                                              user.userId && (
+                                              <div className="unassign-user-icon">
+                                                <IoIosCloseCircle size={14} />
+                                              </div>
+                                            )}
+                                        </div>
+                                      );
+                                    })}
+                                  <div
+                                    className="assign-user-icon"
+                                    onClick={() => handleClickAddUser(taskId)}
+                                  >
+                                    +
+                                  </div>
+                                </div>
+                                {addTaskUser === taskId && (
+                                  <div className="add-new-user users-list">
+                                    {users.map((user) => {
+                                      const { userId, userName } = user;
+                                      return (
+                                        <div
+                                          key={userId}
+                                          className="new-user"
+                                          onClick={() =>
+                                            handleAddUser(taskId, user)
+                                          }
+                                        >
+                                          {userName}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="description-container">
+                                <h3 className="description-heading">
+                                  Description
+                                </h3>
+                                <p className="description-content">
+                                  {description.length > 0 ? description : "-"}
+                                </p>
+                              </div>
+                              <div className="due-date-container">
+                                <h3 className="due-date-heading">Due date</h3>
+                                <div className="due-date">
+                                  {dueDate
+                                    ? formattedDate
+                                    : dueDate === "" && "No due date"}
+                                </div>
                               </div>
                             </div>
-                            {addTaskUser === taskId && (
-                              <div className="add-new-user users-list">
-                                {users.map((user) => {
-                                  const { userId, userName } = user;
-                                  return (
-                                    <div
-                                      key={userId}
-                                      className="new-user"
-                                      onClick={() =>
-                                        handleAddUser(taskId, user)
-                                      }
-                                    >
-                                      {userName}
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                            {isEditTaskModalOpen === taskName && (
+                              <FormModal
+                                editTaskData={editTaskData}
+                                taskId={taskId}
+                                handleChangeEditTask={handleChangeEditTask}
+                                taskPriorities={taskPriorities}
+                                handleEditTask={handleEditTask}
+                                handleCloseEditTaskModal={
+                                  handleCloseEditTaskModal
+                                }
+                              />
                             )}
                           </div>
-                          <div className="description-container">
-                            <h3 className="description-heading">Description</h3>
-                            <p className="description-content">
-                              {description.length > 0 ? description : "-"}
-                            </p>
-                          </div>
-                          <div className="due-date-container">
-                            <h3 className="due-date-heading">Due date</h3>
-                            <div className="due-date">
-                              {dueDate
-                                ? formattedDate
-                                : dueDate === "" && "No due date"}
+                        );
+                      })}
+                    {isAddTask === columnName && (
+                      <div className="add-task-section">
+                        <div>
+                          <label
+                            htmlFor="task-name"
+                            className="add-task-title-heading"
+                          >
+                            Title
+                          </label>
+                          <div className="add-task-title-container">
+                            <div>
+                              <MdTask size={20} color="#f49d3f" />
+                            </div>
+                            <div>
+                              <input
+                                id="task-name"
+                                type="text"
+                                placeholder="Enter task name"
+                                className="add-task-input"
+                                value={taskName}
+                                onChange={handleChangeTaskName}
+                              />
                             </div>
                           </div>
                         </div>
-                        {isEditTaskModalOpen === taskName && (
-                          <FormModal
-                            editTaskData={editTaskData}
-                            taskId={taskId}
-                            handleChangeEditTask={handleChangeEditTask}
-                            taskPriorities={taskPriorities}
-                            handleEditTask={handleEditTask}
-                            handleCloseEditTaskModal={handleCloseEditTaskModal}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                {isAddTask === columnName && (
-                  <div className="add-task-section">
-                    <div>
-                      <label
-                        htmlFor="task-name"
-                        className="add-task-title-heading"
-                      >
-                        Title
-                      </label>
-                      <div className="add-task-title-container">
                         <div>
-                          <MdTask size={20} color="#f49d3f" />
+                          <div className="add-task-priority-container">
+                            <label
+                              htmlFor="task-priority"
+                              className="add-task-priority-heading"
+                            >
+                              Priority
+                            </label>
+                            <div>
+                              <select
+                                id="task-priority"
+                                className="add-task-priority"
+                                value={priority}
+                                onChange={handleChangePriority}
+                              >
+                                {taskPriorities.map((taskPriority) => {
+                                  const { priorityId, priority } = taskPriority;
+                                  return (
+                                    <option key={priorityId}>{priority}</option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <input
-                            id="task-name"
-                            type="text"
-                            placeholder="Enter task name"
-                            className="add-task-input"
-                            value={taskName}
-                            onChange={handleChangeTaskName}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="add-task-priority-container">
-                        <label
-                          htmlFor="task-priority"
-                          className="add-task-priority-heading"
-                        >
-                          Priority
-                        </label>
-                        <div>
-                          <select
-                            id="task-priority"
-                            className="add-task-priority"
-                            value={priority}
-                            onChange={handleChangePriority}
+                        <div className="assign-user-container">
+                          <label
+                            htmlFor="assign-user"
+                            className="assign-user-label"
                           >
-                            {taskPriorities.map((taskPriority) => {
-                              const { priorityId, priority } = taskPriority;
-                              return (
-                                <option key={priorityId}>{priority}</option>
-                              );
-                            })}
-                          </select>
+                            Assign user(s)
+                          </label>
+                          <div className="assign-user-dropdown">
+                            <select
+                              id="assign-user"
+                              className="assign-user"
+                              value={assignedUsers.map((user) => user.userName)}
+                              onChange={handleAssignUsers}
+                              multiple
+                            >
+                              <option disabled>Select user</option>
+                              {users.map((user) => {
+                                const { userId, userName } = user;
+                                return (
+                                  <option key={userId} value={userName}>
+                                    {userName}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="add-description-container">
+                          <label
+                            htmlFor="add-description"
+                            className="add-description-heading"
+                          >
+                            Description
+                          </label>
+                          <textarea
+                            id="add-description"
+                            value={description}
+                            onChange={handleAddDescription}
+                            className="add-description-content"
+                          ></textarea>
+                        </div>
+                        <div className="add-due-date-container">
+                          <label
+                            htmlFor="dueDate"
+                            className="add-due-date-label"
+                          >
+                            Due date
+                          </label>
+                          <div className="add-due-date">
+                            <input
+                              id="dueDate"
+                              type="date"
+                              className="add-due-date-field"
+                              value={dueDate}
+                              onChange={handleDuedate}
+                            />
+                          </div>
+                        </div>
+                        <div className="btn-group">
+                          <button
+                            type="button"
+                            onClick={() => handleAddTask(id, taskName)}
+                            className="add-btn"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelTask}
+                            className="cancel-btn"
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </div>
-                    </div>
-                    <div className="assign-user-container">
-                      <label
-                        htmlFor="assign-user"
-                        className="assign-user-label"
-                      >
-                        Assign user(s)
-                      </label>
-                      <div className="assign-user-dropdown">
-                        <select
-                          id="assign-user"
-                          className="assign-user"
-                          value={assignedUsers.map((user) => user.userName)}
-                          onChange={handleAssignUsers}
-                          multiple
-                        >
-                          <option disabled>Select user</option>
-                          {users.map((user) => {
-                            const { userId, userName } = user;
-                            return (
-                              <option key={userId} value={userName}>
-                                {userName}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="add-description-container">
-                      <label
-                        htmlFor="add-description"
-                        className="add-description-heading"
-                      >
-                        Description
-                      </label>
-                      <textarea
-                        id="add-description"
-                        value={description}
-                        onChange={handleAddDescription}
-                        className="add-description-content"
-                      ></textarea>
-                    </div>
-                    <div className="add-due-date-container">
-                      <label htmlFor="dueDate" className="add-due-date-label">
-                        Due date
-                      </label>
-                      <div className="add-due-date">
-                        <input
-                          id="dueDate"
-                          type="date"
-                          className="add-due-date-field"
-                          value={dueDate}
-                          onChange={handleDuedate}
-                        />
-                      </div>
-                    </div>
-                    <div className="btn-group">
-                      <button
-                        type="button"
-                        onClick={() => handleAddTask(id, taskName)}
-                        className="add-btn"
-                      >
-                        Add
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelTask}
-                        className="cancel-btn"
-                      >
-                        Cancel
-                      </button>
+                    )}
+
+                    <div
+                      className="add-task-container"
+                      onClick={() => handleAddClickTask(columnName)}
+                    >
+                      <div className="add-task-icon">+</div>
+                      <div className="add-task-text">ADD TASK</div>
                     </div>
                   </div>
-                )}
+                </div>
+              );
+            })}
+            {isAddColumn && (
+              <div className="add-column-input-container">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Enter column name"
+                    className="add-column-input"
+                    value={columnName}
+                    onChange={handleChangeColumnName}
+                  />
+                </div>
 
-                <div
-                  className="add-task-container"
-                  onClick={() => handleAddClickTask(columnName)}
-                >
-                  <div className="add-task-icon">+</div>
-                  <div className="add-task-text">ADD TASK</div>
+                <div className="btn-group">
+                  <button
+                    type="button"
+                    onClick={() => handleAddColumnName(columnName)}
+                    className="add-btn"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelColumn}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-            </div>
-          );
-        })}
-        {isAddColumn && (
-          <div className="add-column-input-container">
+            )}
+
             <div>
-              <input
-                type="text"
-                placeholder="Enter column name"
-                className="add-column-input"
-                value={columnName}
-                onChange={handleChangeColumnName}
-              />
-            </div>
-
-            <div className="btn-group">
-              <button
-                type="button"
-                onClick={() => handleAddColumnName(columnName)}
-                className="add-btn"
+              <div
+                className="add-column-container"
+                onClick={handleClickAddColumn}
               >
-                Add
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelColumn}
-                className="cancel-btn"
-              >
-                Cancel
-              </button>
+                <div className="add-column-icon">+</div>
+                <div className="add-column-text">ADD COLUMN</div>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div>
-          <div className="add-column-container" onClick={handleClickAddColumn}>
-            <div className="add-column-icon">+</div>
-            <div className="add-column-text">ADD COLUMN</div>
           </div>
         </div>
       </div>
