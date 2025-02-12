@@ -10,7 +10,7 @@
   .columns-container {
     display: flex;
     gap: 14px;
-    padding-top: 30px;
+    padding-top: 10px;
   }
   
   .column {
